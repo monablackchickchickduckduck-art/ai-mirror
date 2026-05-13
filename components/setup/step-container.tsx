@@ -9,12 +9,11 @@ import {
 } from "@/components/ui/card"
 import { FC, useRef } from "react"
 
-export const SETUP_STEP_COUNT = 3
-
 interface StepContainerProps {
   stepDescription: string
   stepNum: number
   stepTitle: string
+  totalSteps?: number
   onShouldProceed: (shouldProceed: boolean) => void
   children?: React.ReactNode
   showBackButton?: boolean
@@ -25,6 +24,7 @@ export const StepContainer: FC<StepContainerProps> = ({
   stepDescription,
   stepNum,
   stepTitle,
+  totalSteps = 3,
   onShouldProceed,
   children,
   showBackButton = false,
@@ -42,42 +42,43 @@ export const StepContainer: FC<StepContainerProps> = ({
 
   return (
     <Card
-      className="max-h-[calc(100vh-60px)] w-[600px] overflow-auto"
+      className="max-h-[calc(100vh-60px)] w-[600px] overflow-auto border-[#E94560]/20 bg-[#1A1A2E]"
       onKeyDown={handleKeyDown}
     >
       <CardHeader>
-        <CardTitle className="flex justify-between">
-          <div>{stepTitle}</div>
-
-          <div className="text-sm">
-            {stepNum} / {SETUP_STEP_COUNT}
-          </div>
+        <CardTitle className="flex items-center justify-between">
+          <span className="font-display text-xl text-[#F1F1F6]">{stepTitle}</span>
+          <span className="text-sm text-[#6B6B7B]">
+            {stepNum} / {totalSteps}
+          </span>
         </CardTitle>
-
-        <CardDescription>{stepDescription}</CardDescription>
+        <CardDescription className="text-[#A6A6B3]">
+          {stepDescription}
+        </CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-4">{children}</CardContent>
 
-      <CardFooter className="flex justify-between">
+      <CardFooter className="flex justify-end">
         <div>
           {showBackButton && (
             <Button
               size="sm"
               variant="outline"
               onClick={() => onShouldProceed(false)}
+              className="border-[#A6A6B3]/20 text-[#A6A6B3] hover:bg-[#16213E] hover:text-[#F1F1F6]"
             >
               Back
             </Button>
           )}
         </div>
-
         <div>
           {showNextButton && (
             <Button
               ref={buttonRef}
               size="sm"
               onClick={() => onShouldProceed(true)}
+              className="bg-[#E94560] text-white hover:bg-[#F05A73]"
             >
               Next
             </Button>

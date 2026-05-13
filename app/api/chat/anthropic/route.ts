@@ -1,4 +1,8 @@
 import { CHAT_SETTING_LIMITS } from "@/lib/chat-setting-limits"
+import {
+  buildMiraSystemPrompt,
+  parseStructuredMemory
+} from "@/lib/server/prompt-helpers"
 import { checkApiKey, getServerProfile } from "@/lib/server/server-chat-helpers"
 import { getBase64FromDataURL, getMediaTypeFromDataURL } from "@/lib/utils"
 import { ChatSettings } from "@/types"
@@ -17,11 +21,15 @@ export async function POST(request: NextRequest) {
 
   try {
     const profile = await getServerProfile()
-
     checkApiKey(profile.anthropic_api_key, "Anthropic")
 
-    let ANTHROPIC_FORMATTED_MESSAGES: any = messages.slice(1)
+    // AI Mirror: Inject memory-based system prompt
+    const structuredMemory = (profile as any).structured_memory || null
+    const memory = parseStructuredMemory(structuredMemory)
+    const miraSystemPrompt = buildMiraSystemPrompt(memory)
 
+    // Format messages for Anthropic
+    let ANTHROPIC_FORMATTED_MESSAGES: any = messages.slice(1)
     ANTHROPIC_FORMATTED_MESSAGES = ANTHROPIC_FORMATTED_MESSAGES?.map(
       (message: any) => {
         const messageContent =
@@ -33,7 +41,6 @@ export async function POST(request: NextRequest) {
           ...message,
           content: messageContent.map((content: any) => {
             if (typeof content === "string") {
-              // Handle the case where content is a string
               return { type: "text", text: content }
             } else if (
               content?.type === "image_url" &&
@@ -64,7 +71,7 @@ export async function POST(request: NextRequest) {
         model: chatSettings.model,
         messages: ANTHROPIC_FORMATTED_MESSAGES,
         temperature: chatSettings.temperature,
-        system: messages[0].content,
+        system: miraSystemPrompt,
         max_tokens:
           CHAT_SETTING_LIMITS[chatSettings.model].MAX_TOKEN_OUTPUT_LENGTH,
         stream: true
